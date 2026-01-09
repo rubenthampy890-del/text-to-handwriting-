@@ -306,24 +306,30 @@ app.use((error, req, res, next) => {
 });
 
 // ============================================
-// Start Server
+// Start Server (Local Development) or Export for Vercel
 // ============================================
 
-app.listen(PORT, () => {
-    console.log('================================================');
-    console.log('  Text to Handwriting Server');
-    console.log('================================================');
-    console.log(`  Server running on: http://localhost:${PORT}`);
-    console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('================================================');
-    console.log('');
-    console.log('  API Endpoints:');
-    console.log(`    POST   /api/upload-handwriting`);
-    console.log(`    GET    /api/handwritings`);
-    console.log(`    DELETE /api/handwriting/:id`);
-    console.log(`    POST   /api/extract-text`);
-    console.log(`    GET    /api/health`);
-    console.log('');
-    console.log('  Open http://localhost:' + PORT + ' in your browser');
-    console.log('================================================');
-});
+// Only start the server if not running in Vercel serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log('================================================');
+        console.log('  Text to Handwriting Server');
+        console.log('================================================');
+        console.log(`  Server running on: http://localhost:${PORT}`);
+        console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log('================================================');
+        console.log('');
+        console.log('  API Endpoints:');
+        console.log(`    POST   /api/upload-handwriting`);
+        console.log(`    GET    /api/handwritings`);
+        console.log(`    DELETE /api/handwriting/:id`);
+        console.log(`    POST   /api/extract-text`);
+        console.log(`    GET    /api/health`);
+        console.log('');
+        console.log('  Open http://localhost:' + PORT + ' in your browser');
+        console.log('================================================');
+    });
+}
+
+// Export for Vercel serverless
+module.exports = app;
