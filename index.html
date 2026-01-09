@@ -15,6 +15,8 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -39,6 +41,13 @@
                 <div class="canvas-wrapper">
                     <canvas id="canvas"></canvas>
                 </div>
+
+                <!-- Pagination Controls -->
+                <div class="pagination-controls">
+                    <button id="prevPageBtn" class="btn-compact-mini" disabled>◀ Prev</button>
+                    <span id="pageIndicator" class="page-indicator">Page 1 of 1</span>
+                    <button id="nextPageBtn" class="btn-compact-mini" disabled>Next ▶</button>
+                </div>
             </div>
 
             <!-- Right Column: Compact Controls -->
@@ -48,6 +57,31 @@
                     <h3 class="card-title">Your Text</h3>
                     <textarea id="textInput" class="text-input-compact"
                         placeholder="Start typing... (preview updates automatically)" rows="4"></textarea>
+                </div>
+
+                <!-- Assignment Tools (NEW) -->
+                <div class="control-card">
+                    <h3 class="card-title">Assignment Tools & Realism</h3>
+
+                    <div class="compact-row">
+                        <label class="compact-checkbox">
+                            <input type="checkbox" id="impositionToggle">
+                            <span>Repeat Text (Imposition)</span>
+                        </label>
+                        <input type="number" id="impositionCount" class="compact-number-input" value="10" min="1"
+                            max="500" disabled style="width: 60px;">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-checkbox">
+                            <input type="checkbox" id="scannerEffect">
+                            <span>Scanner Effect (Grain/Shadow)</span>
+                        </label>
+                    </div>
+
+                    <div class="compact-row">
+                        <button id="downloadPdfBtn" class="btn-compact">📄 Download as PDF (Multi-Page)</button>
+                    </div>
                 </div>
 
                 <!-- Font & Text Settings -->

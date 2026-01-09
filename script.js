@@ -2,9 +2,6 @@
 // Utility Functions
 // ============================================
 
-/**
- * Debounce function to limit how often a function can run
- */
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -52,6 +49,17 @@ const elements = {
     canvas: document.getElementById('canvas'),
     textInput: document.getElementById('textInput'),
     downloadBtn: document.getElementById('downloadBtn'),
+    downloadPdfBtn: document.getElementById('downloadPdfBtn'),
+
+    // Pagination
+    prevPageBtn: document.getElementById('prevPageBtn'),
+    nextPageBtn: document.getElementById('nextPageBtn'),
+    pageIndicator: document.getElementById('pageIndicator'),
+
+    // Assignment Tools
+    impositionToggle: document.getElementById('impositionToggle'),
+    impositionCount: document.getElementById('impositionCount'),
+    scannerEffect: document.getElementById('scannerEffect'),
 
     // Font & Text controls
     fontSelect: document.getElementById('fontSelect'),
@@ -81,26 +89,25 @@ const elements = {
     paperLinesToggle: document.getElementById('paperLinesToggle'),
     lineColorInput: document.getElementById('lineColorInput'),
 
-    // Advanced
-    handwritingSelect: document.getElementById('handwritingSelect'),
+    // Advanced / Legacy
+    resetSettingsBtn: document.getElementById('resetSettingsBtn'),
     resolutionSelect: document.getElementById('resolutionSelect'),
-    uploadHandwritingBtn: document.getElementById('uploadHandwritingBtn'),
+
+    // File Inputs (Hidden but functional via JS)
     fileInput: document.getElementById('fileInput'),
-    uploadDocumentBtn: document.getElementById('uploadDocumentBtn'),
-    documentInput: document.getElementById('documentInput'),
-    uploadPaperBtn: document.getElementById('uploadPaperBtn'),
     paperBackgroundInput: document.getElementById('paperBackgroundInput'),
-    resetPaperBtn: document.getElementById('resetPaperBtn'),
-    resetSettingsBtn: document.getElementById('resetSettingsBtn')
+    uploadHandwritingBtn: document.getElementById('uploadHandwritingBtn'),
+    uploadPaperBtn: document.getElementById('uploadPaperBtn'),
+    resetPaperBtn: document.getElementById('resetPaperBtn')
 };
 
 // ============================================
 // State
 // ============================================
 const state = {
-    uploadedHandwritings: [],
-    selectedHandwriting: null,
     customPaperBackground: null,
+    textPages: [], // Array of page content strings
+    currentPage: 0,
     settings: {
         fontFamily: 'Kalam',
         fontSize: 28,
@@ -109,6 +116,7 @@ const state = {
         resolution: 150,
         shadowEffect: false,
         randomnessEffect: false,
+        scannerEffect: false,
         verticalPosition: 0,
         wordSpacing: 0,
         letterSpacing: 0,
@@ -118,7 +126,9 @@ const state = {
         marginLeft: 100,
         showLines: true,
         lineSpacing: 35,
-        lineColor: '#94c5e8'
+        lineColor: '#94c5e8',
+        impositionEnabled: false,
+        impositionCount: 10
     }
 };
 
@@ -130,7 +140,7 @@ elements.canvas.width = CONFIG.canvas.width;
 elements.canvas.height = CONFIG.canvas.height;
 
 // ============================================
-// Helper Functions
+// Logic
 // ============================================
 
 function updateConfig() {
@@ -163,50 +173,85 @@ function updateConfig() {
     CONFIG.text.maxWidth = CONFIG.canvas.width - CONFIG.paper.marginLeft - CONFIG.paper.marginRight;
 }
 
-function saveSettings() {
-    localStorage.setItem('handwritingSettings', JSON.stringify(state.settings));
+function processText(text) {
+    // Imposition Logic
+    if (state.settings.impositionEnabled && text.trim()) {
+        const repeatText = text.trim() + '\n';
+        return repeatText.repeat(state.settings.impositionCount);
+    }
+    return text;
 }
 
-function loadSettings() {
-    const saved = localStorage.getItem('handwritingSettings');
-    if (saved) {
-        try {
-            Object.assign(state.settings, JSON.parse(saved));
-            applySettingsToUI();
-        } catch (e) {
-            console.error('Failed to load settings:', e);
+function calculatePagination(text) {
+    if (!text) {
+        state.textPages = [''];
+        state.currentPage = 0;
+        return;
+    }
+
+    ctx.font = `${CONFIG.text.fontSize}px ${CONFIG.text.fontFamily}`;
+
+    const lines = [];
+    const paragraphs = text.split('\n');
+
+    // Word Wrap Logic
+    for (const paragraph of paragraphs) {
+        if (!paragraph) lines.push(''); // Empty line
+
+        const words = paragraph.split(' ');
+        let currentLine = '';
+
+        for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            const metrics = ctx.measureText(testLine);
+
+            if (metrics.width > CONFIG.text.maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+    }
+
+    // Pagination Logic
+    state.textPages = [];
+    let currentPageLines = [];
+
+    // Calculate usable height
+    const startY = CONFIG.paper.marginTop + state.settings.verticalPosition;
+    const endY = CONFIG.canvas.height - CONFIG.paper.marginBottom;
+    const lineHeight = CONFIG.text.lineHeight;
+    const maxLinesPerPage = Math.floor((endY - startY) / lineHeight);
+
+    for (let i = 0; i < lines.length; i++) {
+        currentPageLines.push(lines[i]);
+
+        // If page is full
+        if (currentPageLines.length >= maxLinesPerPage) {
+            state.textPages.push(currentPageLines);
+            currentPageLines = [];
         }
     }
+
+    if (currentPageLines.length > 0) {
+        state.textPages.push(currentPageLines);
+    }
+
+    // Update UI controls
+    updatePaginationUI();
 }
 
-function applySettingsToUI() {
-    elements.fontSelect.value = state.settings.fontFamily;
-    elements.fontSizeSlider.value = state.settings.fontSize;
-    elements.fontSizeValue.textContent = state.settings.fontSize;
-    elements.inkColorSelect.value = state.settings.inkColor;
-    elements.pageSizeSelect.value = state.settings.pageSize;
-    elements.resolutionSelect.value = state.settings.resolution;
-    elements.shadowEffect.checked = state.settings.shadowEffect;
-    elements.randomnessEffect.checked = state.settings.randomnessEffect;
-    elements.verticalPosSlider.value = state.settings.verticalPosition;
-    elements.verticalPosValue.textContent = state.settings.verticalPosition;
-    elements.wordSpacingSlider.value = state.settings.wordSpacing;
-    elements.wordSpacingValue.textContent = state.settings.wordSpacing;
-    elements.letterSpacingSlider.value = state.settings.letterSpacing;
-    elements.letterSpacingValue.textContent = state.settings.letterSpacing;
-    elements.marginTop.value = state.settings.marginTop;
-    elements.marginRight.value = state.settings.marginRight;
-    elements.marginBottom.value = state.settings.marginBottom;
-    elements.marginLeft.value = state.settings.marginLeft;
-    elements.paperLinesToggle.checked = state.settings.showLines;
-    elements.lineSpacingSlider.value = state.settings.lineSpacing;
-    elements.lineSpacingValue.textContent = state.settings.lineSpacing;
-    elements.lineColorInput.value = state.settings.lineColor;
-}
+function updatePaginationUI() {
+    const total = state.textPages.length;
+    const current = state.currentPage + 1;
 
-// ============================================
-// Drawing Functions
-// ============================================
+    elements.pageIndicator.textContent = `Page ${current} of ${total}`;
+
+    elements.prevPageBtn.disabled = state.currentPage === 0;
+    elements.nextPageBtn.disabled = state.currentPage === total - 1;
+}
 
 function drawRuledPaper() {
     if (state.customPaperBackground) {
@@ -214,14 +259,16 @@ function drawRuledPaper() {
         img.onload = () => {
             ctx.drawImage(img, 0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
             drawRuledLines();
+            renderContent(); // Callback hell avoidance (simple)
         };
         img.src = state.customPaperBackground;
-        return;
+        return true; // async mode
     }
 
     ctx.fillStyle = CONFIG.paper.backgroundColor;
     ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
     drawRuledLines();
+    return false; // sync mode
 }
 
 function drawRuledLines() {
@@ -243,301 +290,262 @@ function drawRuledLines() {
     }
 }
 
-function wrapText(text, maxWidth) {
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = '';
+function applyScannerEffect() {
+    if (!state.settings.scannerEffect) return;
 
-    ctx.font = `${CONFIG.text.fontSize}px ${CONFIG.text.fontFamily}`;
+    // 1. Add subtle noise/grain
+    const imageData = ctx.getImageData(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+    const data = imageData.data;
 
-    for (let word of words) {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        const metrics = ctx.measureText(testLine);
-
-        if (metrics.width > maxWidth && currentLine) {
-            lines.push(currentLine);
-            currentLine = word;
-        } else {
-            currentLine = testLine;
-        }
+    for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 10; // +/- 5
+        data[i] += noise;     // R
+        data[i + 1] += noise;   // G
+        data[i + 2] += noise;   // B
     }
+    ctx.putImageData(imageData, 0, 0);
 
-    if (currentLine) lines.push(currentLine);
-    return lines;
+    // 2. Add subtle shadow gradient overlay (simulating bad lighting/scan)
+    const gradient = ctx.createLinearGradient(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+    gradient.addColorStop(0, "rgba(0,0,0,0.02)");
+    gradient.addColorStop(0.5, "rgba(0,0,0,0)");
+    gradient.addColorStop(1, "rgba(0,0,0,0.03)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
 }
 
-function drawHandwrittenText(text) {
-    if (!text.trim()) return;
-
-    const paragraphs = text.split('\n');
-    let allLines = [];
-
-    for (const paragraph of paragraphs) {
-        if (paragraph.trim()) {
-            allLines = allLines.concat(wrapText(paragraph, CONFIG.text.maxWidth));
-        } else {
-            allLines.push('');
-        }
-    }
+function renderContent() {
+    const lines = state.textPages[state.currentPage] || [];
 
     ctx.font = `${CONFIG.text.fontSize}px ${CONFIG.text.fontFamily}`;
     ctx.fillStyle = CONFIG.text.color;
     ctx.textBaseline = 'alphabetic';
 
     if (state.settings.shadowEffect) {
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowBlur = 2;
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)'; // Darker for realism
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 2; // Offset for pen depth
+        ctx.shadowOffsetY = 2;
     }
 
     let x = CONFIG.paper.marginLeft;
-    let y = CONFIG.paper.marginTop + state.settings.verticalPosition;
+    // Align text to ruled lines
+    // Normally text sits on baseline. We adjust startY to match the ruled line Y pos.
+    // Vertical position slider is an offset.
+    let y = CONFIG.paper.marginTop + parseInt(state.settings.lineSpacing) - 5 + state.settings.verticalPosition;
 
-    for (let line of allLines) {
-        if (y > CONFIG.canvas.height - CONFIG.paper.marginBottom) break;
-
+    for (let line of lines) {
         if (line) {
+            let currentX = x;
+
+            // Randomize X starting position slightly per line for realism
+            if (state.settings.randomnessEffect) {
+                currentX += (Math.random() - 0.5) * 4;
+            }
+
             if (state.settings.wordSpacing !== 0) {
                 const words = line.split(' ');
-                let currentX = x;
                 words.forEach(word => {
-                    ctx.fillText(word, currentX, y);
+                    const wordY = y + (state.settings.randomnessEffect ? (Math.random() - 0.5) * 2 : 0);
+                    ctx.fillText(word, currentX, wordY);
                     currentX += ctx.measureText(word).width + ctx.measureText(' ').width + state.settings.wordSpacing;
                 });
             } else {
                 if (state.settings.letterSpacing !== 0) {
                     ctx.letterSpacing = state.settings.letterSpacing + 'px';
                 }
+
                 if (state.settings.randomnessEffect) {
-                    const variation = (Math.random() - 0.5) * 2;
-                    ctx.fillText(line, x, y + variation);
+                    // Per-letter variation (highly realistic)
+                    const letters = line.split('');
+                    letters.forEach(char => {
+                        const charY = y + (Math.random() - 0.5) * 3; // Baseline jitter
+                        const charX = currentX + (Math.random() - 0.5) * 1; // Kerning jitter
+                        ctx.fillText(char, charX, charY);
+                        currentX += ctx.measureText(char).width + state.settings.letterSpacing;
+                    });
                 } else {
-                    ctx.fillText(line, x, y);
+                    ctx.fillText(line, currentX, y);
                 }
                 ctx.letterSpacing = '0px';
             }
         }
-
         y += CONFIG.text.lineHeight;
     }
 
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
+
+    applyScannerEffect();
 }
 
-function generateImage() {
-    const text = elements.textInput.value;
+function generateImage(recalculatePages = false) {
+    const rawText = elements.textInput.value;
+    const processedText = processText(rawText);
 
-    ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
-    drawRuledPaper();
+    if (recalculatePages) {
+        calculatePagination(processedText);
+    }
 
-    if (text.trim()) {
-        drawHandwrittenText(text);
+    const isAsync = drawRuledPaper();
+    if (!isAsync) {
+        renderContent();
     }
 }
 
 // ============================================
-// Real-Time Preview (Debounced)
+// PDF Export Logic
 // ============================================
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
 
-const debouncedGenerate = debounce(generateImage, 300);
-const debouncedTextGenerate = debounce(generateImage, 500);
+    // Create new PDF (A4/Letter depending on settings)
+    const format = state.settings.pageSize === 'legal' ? 'legal' :
+        state.settings.pageSize === 'letter' ? 'letter' : 'a4';
+
+    const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: format
+    });
+
+    const originalPage = state.currentPage; // Save current page
+
+    // Loop through all pages
+    const totalPages = state.textPages.length;
+    const btnText = elements.downloadPdfBtn.textContent;
+    elements.downloadPdfBtn.textContent = `Generating... (0/${totalPages})`;
+    elements.downloadPdfBtn.disabled = true;
+
+    for (let i = 0; i < totalPages; i++) {
+        state.currentPage = i;
+
+        // Force synchronous render (or await async)
+        // For simplicity we assume synchronous ruled paper rendering unless custom BG
+        // If custom BG, we need to wait for image load (but here it's arguably cached)
+
+        ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+
+        // Draw logic duplicated to ensure sync execution if possible or simple delay
+        drawRuledPaper();
+
+        // Wait small tick for image draw if async (hacky but effective for simple app)
+        await new Promise(r => setTimeout(r, 100));
+        renderContent();
+
+        const imgData = elements.canvas.toDataURL('image/jpeg', 0.85); // JPEG for smaller PDF size
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        if (i < totalPages - 1) {
+            pdf.addPage();
+        }
+
+        elements.downloadPdfBtn.textContent = `Generating... (${i + 1}/${totalPages})`;
+    }
+
+    pdf.save('assignment.pdf');
+
+    // Restore
+    state.currentPage = originalPage;
+    elements.downloadPdfBtn.textContent = btnText;
+    elements.downloadPdfBtn.disabled = false;
+
+    generateImage(false); // Redraw interface
+}
 
 // ============================================
 // Event Listeners
 // ============================================
 
-// Text input - auto-generate on typing
+const debouncedGenerate = debounce(() => generateImage(false), 300);
+const debouncedTextGenerate = debounce(() => generateImage(true), 500);
+
+// Text & Imposition
 elements.textInput.addEventListener('input', debouncedTextGenerate);
 
-// Font controls
+elements.impositionToggle.addEventListener('change', (e) => {
+    state.settings.impositionEnabled = e.target.checked;
+    elements.impositionCount.disabled = !e.target.checked;
+    generateImage(true);
+});
+
+elements.impositionCount.addEventListener('input', (e) => {
+    state.settings.impositionCount = parseInt(e.target.value) || 1;
+    generateImage(true);
+});
+
+// Effects
+elements.scannerEffect.addEventListener('change', (e) => {
+    state.settings.scannerEffect = e.target.checked;
+    generateImage(false);
+});
+
+// Pagination
+elements.prevPageBtn.addEventListener('click', () => {
+    if (state.currentPage > 0) {
+        state.currentPage--;
+        updatePaginationUI();
+        generateImage(false);
+    }
+});
+
+elements.nextPageBtn.addEventListener('click', () => {
+    if (state.currentPage < state.textPages.length - 1) {
+        state.currentPage++;
+        updatePaginationUI();
+        generateImage(false);
+    }
+});
+
+elements.downloadPdfBtn.addEventListener('click', generatePDF);
+
+// Common Settings
 elements.fontSelect.addEventListener('change', (e) => {
     state.settings.fontFamily = e.target.value;
     updateConfig();
-    saveSettings();
-    debouncedGenerate();
+    generateImage(true); // Font size chg requires repagination
 });
 
 elements.fontSizeSlider.addEventListener('input', (e) => {
     state.settings.fontSize = parseInt(e.target.value);
     elements.fontSizeValue.textContent = e.target.value;
     updateConfig();
-    saveSettings();
-    debouncedGenerate();
+    generateImage(true); // Size chg requires repagination
 });
 
-elements.inkColorSelect.addEventListener('change', (e) => {
-    if (e.target.value === 'custom') {
-        elements.customInkColor.style.display = 'block';
-        state.settings.inkColor = elements.customInkColor.value;
-    } else {
-        elements.customInkColor.style.display = 'none';
-        state.settings.inkColor = e.target.value;
-    }
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
+[elements.verticalPosSlider, elements.wordSpacingSlider, elements.letterSpacingSlider].forEach(el => {
+    el.addEventListener('input', (e) => {
+        // Just redraw, no repagination needed for spacing usually (except word spacing if word wrap changes? Yes)
+        // Safest is repaginate
+        const id = e.target.id;
+        state.settings[id.replace('Slider', '')] = parseFloat(e.target.value);
+        document.getElementById(id.replace('Slider', 'Value')).textContent = e.target.value;
+        generateImage(id !== 'verticalPosSlider'); // Repaginate if spacing changes width
+    });
 });
 
-elements.customInkColor.addEventListener('input', (e) => {
-    state.settings.inkColor = e.target.value;
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
+[elements.inkColorSelect, elements.customInkColor, elements.shadowEffect, elements.randomnessEffect].forEach(el => {
+    el?.addEventListener(el.type === 'checkbox' ? 'change' : 'input', (e) => {
+        state.settings[el.id.replace('Select', '').replace('Input', '')] = el.type === 'checkbox' ? e.target.checked : e.target.value;
+        generateImage(false);
+    });
 });
 
-elements.shadowEffect.addEventListener('change', (e) => {
-    state.settings.shadowEffect = e.target.checked;
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.randomnessEffect.addEventListener('change', (e) => {
-    state.settings.randomnessEffect = e.target.checked;
-    saveSettings();
-    debouncedGenerate();
-});
-
-// Spacing controls
-elements.verticalPosSlider.addEventListener('input', (e) => {
-    state.settings.verticalPosition = parseInt(e.target.value);
-    elements.verticalPosValue.textContent = e.target.value;
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.wordSpacingSlider.addEventListener('input', (e) => {
-    state.settings.wordSpacing = parseInt(e.target.value);
-    elements.wordSpacingValue.textContent = e.target.value;
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.letterSpacingSlider.addEventListener('input', (e) => {
-    state.settings.letterSpacing = parseFloat(e.target.value);
-    elements.letterSpacingValue.textContent = e.target.value;
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.lineSpacingSlider.addEventListener('input', (e) => {
-    state.settings.lineSpacing = parseInt(e.target.value);
-    elements.lineSpacingValue.textContent = e.target.value;
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
-});
-
-// Page & Margins
-elements.pageSizeSelect.addEventListener('change', (e) => {
-    state.settings.pageSize = e.target.value;
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
-});
-
+// Margins
 [elements.marginTop, elements.marginRight, elements.marginBottom, elements.marginLeft].forEach(input => {
     input.addEventListener('change', (e) => {
         const field = e.target.id.replace('margin', '').toLowerCase();
         state.settings[`margin${field.charAt(0).toUpperCase() + field.slice(1)}`] = parseInt(e.target.value);
         updateConfig();
-        saveSettings();
-        debouncedGenerate();
+        generateImage(true); // Margins change page size
     });
 });
 
-elements.paperLinesToggle.addEventListener('change', (e) => {
-    state.settings.showLines = e.target.checked;
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.lineColorInput.addEventListener('input', (e) => {
-    state.settings.lineColor = e.target.value;
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
-});
-
-elements.resolutionSelect.addEventListener('change', (e) => {
-    state.settings.resolution = parseInt(e.target.value);
-    updateConfig();
-    saveSettings();
-    debouncedGenerate();
-});
-
-// Advanced buttons
-elements.uploadHandwritingBtn?.addEventListener('click', () => elements.fileInput.click());
-elements.uploadDocumentBtn?.addEventListener('click', () => elements.documentInput.click());
-elements.uploadPaperBtn?.addEventListener('click', () => elements.paperBackgroundInput.click());
-
-elements.paperBackgroundInput?.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            state.customPaperBackground = e.target.result;
-            elements.resetPaperBtn.style.display = 'inline-block';
-            debouncedGenerate();
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-elements.resetPaperBtn?.addEventListener('click', () => {
-    state.customPaperBackground = null;
-    elements.resetPaperBtn.style.display = 'none';
-    elements.paperBackgroundInput.value = '';
-    debouncedGenerate();
-});
-
-elements.resetSettingsBtn?.addEventListener('click', () => {
-    if (confirm('Reset all settings to defaults?')) {
-        state.settings = {
-            fontFamily: 'Kalam',
-            fontSize: 28,
-            inkColor: '#2563eb',
-            pageSize: 'a4',
-            resolution: 150,
-            shadowEffect: false,
-            randomnessEffect: false,
-            verticalPosition: 0,
-            wordSpacing: 0,
-            letterSpacing: 0,
-            marginTop: 80,
-            marginRight: 100,
-            marginBottom: 80,
-            marginLeft: 100,
-            showLines: true,
-            lineSpacing: 35,
-            lineColor: '#94c5e8'
-        };
-        applySettingsToUI();
-        updateConfig();
-        saveSettings();
-        debouncedGenerate();
-    }
-});
-
-// Download
-elements.downloadBtn.addEventListener('click', () => {
-    elements.canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `handwritten-${Date.now()}.png`;
-        link.href = url;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-    }, 'image/png');
-});
-
-// ============================================
 // Initialize
-// ============================================
-
-loadSettings();
 updateConfig();
-generateImage(); // Initial generation
-
-console.log('Text to Handwriting app initialized (Real-time preview enabled)');
+generateImage(true);
+console.log('Phase 5 Features Loaded');
