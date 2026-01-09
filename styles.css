@@ -1,0 +1,496 @@
+/* ============================================
+   Design System & CSS Variables
+   ============================================ */
+:root {
+    /* Colors - Dark Mode Palette */
+    --bg-primary: #0f0f14;
+    --bg-secondary: #1a1a24;
+    --bg-tertiary: #24243a;
+    --bg-hover: #2d2d45;
+
+    --text-primary: #e8e8f0;
+    --text-secondary: #a0a0b8;
+    --text-muted: #6b6b85;
+
+    --accent-primary: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.3);
+
+    --border-color: #2d2d45;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px var(--accent-glow);
+
+    /* Typography */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* Spacing - OPTIMIZED (Reduced) */
+    --space-xs: 0.375rem;
+    /* 6px */
+    --space-sm: 0.5rem;
+    /* 8px */
+    --space-md: 0.75rem;
+    /* 12px */
+    --space-lg: 1rem;
+    /* 16px */
+    --space-xl: 1.5rem;
+    /* 24px */
+
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+/* ============================================
+   App Container
+   ============================================ */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   Header (Compact)
+   ============================================ */
+.app-header {
+    text-align: center;
+    padding: var(--space-lg) var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.app-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-xs);
+}
+
+.app-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   Two-Column Main Layout
+   ============================================ */
+.app-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    align-items: start;
+}
+
+/* Left Column: Preview */
+.preview-column {
+    position: sticky;
+    top: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.preview-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.canvas-wrapper {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    overflow: auto;
+    max-height: calc(100vh - 200px);
+}
+
+#canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+}
+
+/* Right Column: Controls */
+.controls-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: var(--space-xs);
+}
+
+/* Custom Scrollbar */
+.controls-column::-webkit-scrollbar {
+    width: 6px;
+}
+
+.controls-column::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+.controls-column::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.controls-column::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* ============================================
+   Control Cards (Compact)
+   ============================================ */
+.control-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+/* ============================================
+   Compact Controls
+   ============================================ */
+.compact-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.compact-row:last-child {
+    margin-bottom: 0;
+}
+
+.compact-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.compact-select {
+    flex: 1;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.compact-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.compact-select-small {
+    flex: 0 1 auto;
+    min-width: 100px;
+}
+
+.compact-slider {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 999px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.compact-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.compact-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.compact-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.compact-color {
+    width: 36px;
+    height: 28px;
+    padding: 2px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.compact-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.compact-checkbox input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: var(--accent-primary);
+}
+
+/* ============================================
+   Text Input (Compact)
+   ============================================ */
+.text-input-compact {
+    width: 100%;
+    padding: var(--space-sm);
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    transition: all var(--transition-fast);
+}
+
+.text-input-compact:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.text-input-compact::placeholder {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   Special Layouts
+   ============================================ */
+.color-group {
+    display: flex;
+    gap: var(--space-xs);
+    flex: 1;
+}
+
+.margin-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xs);
+}
+
+.margin-grid input {
+    padding: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.margin-grid input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.button-row {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+}
+
+.button-row:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   Buttons (Compact)
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-download {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%);
+    color: white;
+}
+
+.btn-download:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-compact {
+    flex: 1;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-compact:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.btn-compact.btn-secondary {
+    background: var(--bg-primary);
+}
+
+.btn-compact-mini {
+    padding: var(--space-xs);
+    font-size: 0.7rem;
+    background: var(--bg-primary);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+/* ============================================
+   Footer (Compact)
+   ============================================ */
+.app-footer {
+    text-align: center;
+    padding: var(--space-md);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 1200px) {
+    .app-main {
+        grid-template-columns: 1fr 380px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .app-main {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+
+    .preview-column {
+        position: relative;
+        top: 0;
+    }
+
+    .controls-column {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .canvas-wrapper {
+        max-height: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-main {
+        padding: var(--space-sm);
+    }
+
+    .preview-header {
+        flex-direction: column;
+        gap: var(--space-sm);
+        align-items: stretch;
+    }
+
+    .btn-download {
+        width: 100%;
+    }
+
+    .compact-row {
+        flex-wrap: wrap;
+    }
+
+    .compact-label {
+        min-width: 60px;
+    }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.hidden {
+    display: none !important;
+}

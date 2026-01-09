@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Convert typed text into realistic handwritten page images instantly">
+    <title>Text to Handwriting - Convert Text to Handwritten Images</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Caveat:wght@400;700&family=Patrick+Hand&family=Shadows+Into+Light&family=Dancing+Script:wght@400;700&family=Indie+Flower&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">✍️ Text to Handwriting</h1>
+            <p class="app-subtitle">Real-time preview • Fully customizable</p>
+        </header>
+
+        <!-- Main Two-Column Layout -->
+        <main class="app-main">
+            <!-- Left Column: Live Preview -->
+            <div class="preview-column">
+                <div class="preview-header">
+                    <h2 class="preview-title">Live Preview</h2>
+                    <button id="downloadBtn" class="btn btn-download">
+                        <span>⬇️</span>
+                        Download PNG
+                    </button>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column: Compact Controls -->
+            <div class="controls-column">
+                <!-- Text Input (Compact) -->
+                <div class="control-card">
+                    <h3 class="card-title">Your Text</h3>
+                    <textarea id="textInput" class="text-input-compact"
+                        placeholder="Start typing... (preview updates automatically)" rows="4"></textarea>
+                </div>
+
+                <!-- Font & Text Settings -->
+                <div class="control-card">
+                    <h3 class="card-title">Font & Text</h3>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Font</label>
+                        <select id="fontSelect" class="compact-select">
+                            <option value="Kalam">Kalam</option>
+                            <option value="Caveat">Caveat</option>
+                            <option value="Patrick Hand">Patrick Hand</option>
+                            <option value="Shadows Into Light">Shadows Into Light</option>
+                            <option value="Dancing Script">Dancing Script</option>
+                            <option value="Indie Flower">Indie Flower</option>
+                        </select>
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Size: <span id="fontSizeValue">28</span>px</label>
+                        <input type="range" id="fontSizeSlider" class="compact-slider" min="12" max="48" value="28">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Color</label>
+                        <div class="color-group">
+                            <select id="inkColorSelect" class="compact-select compact-select-small">
+                                <option value="#2563eb">Blue</option>
+                                <option value="#000000">Black</option>
+                                <option value="#dc2626">Red</option>
+                                <option value="#16a34a">Green</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input type="color" id="customInkColor" class="compact-color" value="#2563eb"
+                                style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-checkbox">
+                            <input type="checkbox" id="shadowEffect">
+                            <span>Shadow</span>
+                        </label>
+                        <label class="compact-checkbox">
+                            <input type="checkbox" id="randomnessEffect">
+                            <span>Variation</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Spacing -->
+                <div class="control-card">
+                    <h3 class="card-title">Spacing</h3>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Vertical: <span id="verticalPosValue">0</span>px</label>
+                        <input type="range" id="verticalPosSlider" class="compact-slider" min="-10" max="10" value="0">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Word: <span id="wordSpacingValue">0</span>px</label>
+                        <input type="range" id="wordSpacingSlider" class="compact-slider" min="-5" max="20" value="0">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Letter: <span id="letterSpacingValue">0</span>px</label>
+                        <input type="range" id="letterSpacingSlider" class="compact-slider" min="-2" max="10" value="0"
+                            step="0.5">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Line: <span id="lineSpacingValue">35</span>px</label>
+                        <input type="range" id="lineSpacingSlider" class="compact-slider" min="20" max="60" value="35">
+                    </div>
+                </div>
+
+                <!-- Margins & Page -->
+                <div class="control-card">
+                    <h3 class="card-title">Margins & Page</h3>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Page Size</label>
+                        <select id="pageSizeSelect" class="compact-select">
+                            <option value="a4">A4</option>
+                            <option value="letter">Letter</option>
+                            <option value="legal">Legal</option>
+                        </select>
+                    </div>
+
+                    <div class="margin-grid">
+                        <input type="number" id="marginTop" placeholder="T" value="80" min="0" max="200">
+                        <input type="number" id="marginRight" placeholder="R" value="100" min="0" max="200">
+                        <input type="number" id="marginBottom" placeholder="B" value="80" min="0" max="200">
+                        <input type="number" id="marginLeft" placeholder="L" value="100" min="0" max="200">
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-checkbox">
+                            <input type="checkbox" id="paperLinesToggle" checked>
+                            <span>Show Lines</span>
+                        </label>
+                        <input type="color" id="lineColorInput" class="compact-color" value="#94c5e8"
+                            title="Line Color">
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="control-card">
+                    <h3 class="card-title">Advanced</h3>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Handwriting Style</label>
+                        <select id="handwritingSelect" class="compact-select">
+                            <option value="default">Default (Kalam Font)</option>
+                        </select>
+                    </div>
+
+                    <div class="compact-row">
+                        <label class="compact-label">Resolution</label>
+                        <select id="resolutionSelect" class="compact-select compact-select-small">
+                            <option value="150">150 DPI</option>
+                            <option value="300">300 DPI</option>
+                            <option value="600">600 DPI</option>
+                        </select>
+                    </div>
+
+                    <div class="button-row">
+                        <button id="uploadHandwritingBtn" class="btn-compact">📝 Upload Handwriting</button>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+
+                    <div class="button-row">
+                        <button id="uploadDocumentBtn" class="btn-compact">📄 Upload Document</button>
+                        <input type="file" id="documentInput" accept=".pdf,.docx,.doc,.txt" hidden>
+                    </div>
+
+                    <div class="button-row">
+                        <button id="uploadPaperBtn" class="btn-compact">🖼️ Upload Paper BG</button>
+                        <input type="file" id="paperBackgroundInput" accept="image/*" hidden>
+                        <button id="resetPaperBtn" class="btn-compact-mini" style="display: none;">Reset</button>
+                    </div>
+
+                    <div class="button-row">
+                        <button id="resetSettingsBtn" class="btn-compact btn-secondary">🔄 Reset All</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Auto-preview • Settings saved automatically</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
