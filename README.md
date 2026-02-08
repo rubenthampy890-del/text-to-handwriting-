@@ -24,7 +24,7 @@ Convert typed text into realistic handwritten page images with custom handwritin
 
 1. **Clone or navigate to the project directory**:
    ```bash
-   cd /Users/basilthampy/Music/antigravity/text-handwriting
+   cd /Users/text-handwriting 
    ```
 
 2. **Install dependencies**:
